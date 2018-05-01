@@ -1,0 +1,71 @@
+---
+title: "95-845: AA-MLP Project - SyntheticDataCreation"
+author: "Eileen Patten"
+date: "April 30, 2018"
+output: html_document
+---
+
+```{r, warning=FALSE, echo=FALSE, include=FALSE}
+### Load helper packages ###
+loadlibs = function(libs) {
+  for(lib in libs) {
+    class(lib)
+    if(!do.call(require,as.list(lib))) {install.packages(lib)}
+    do.call(require,as.list(lib))
+  }
+}
+libs = c("dplyr", "synthpop")
+loadlibs(libs)
+
+
+options(scipen=999)
+```
+
+
+```{r}
+##I'm performing this data synthesis on the cleaned data (result of data prep file because it was too unweildy with the full data)
+
+setwd("C:/Users/EileenPatten/Documents/MLPipeline/Project") 
+load(file = "FINAL_red_ML.Rda") #original dataset
+
+head(model_data)
+ncol(model_data)
+
+```
+
+
+```{r}
+#USing the following synthetic data calculator: https://cran.r-project.org/web/packages/synthpop/vignettes/synthpop.pdf
+
+model_data <- as.data.frame(model_data)
+
+
+ model_data$tpropertyF_adult <- as.numeric(model_data$tpropertyF_adult)
+ model_data$dofage <- as.numeric(model_data$dofage)
+ model_data$rate_offense <- as.numeric(model_data$rate_offense)
+ model_data$AgeFirstArrest18 <- as.numeric(model_data$AgeFirstArrest18)
+ model_data$PRSCONV25_67 <- as.numeric(model_data$PRSCONV25_67)
+
+
+#drop vars giving the synhetic data issue -- I couldn't figure out why this one was an issue
+drop <- c("PRSCONV25_67")
+model_data = model_data[,!(names(model_data) %in% drop)]
+
+#generate synthetic data
+sds_model_data <- syn(model_data, seed = 0, maxfaclevels = 150)
+
+ncol(sds_model_data$syn)
+
+#Shows the method for generating the data for each feature
+sds_model_data$method
+
+head(sds_model_data$syn)
+
+sds_model_data_save <- sds_model_data$syn
+
+```
+
+```{r}
+save(sds_model_data_save, file = "SYNTHETIC_red_ML.Rda")
+```
+

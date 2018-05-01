@@ -25,86 +25,12 @@ options(scipen=999)
 
 ```{r}
 setwd("C:/Users/EileenPatten/Documents/MLPipeline/Project") 
-load(file = "FINAL_red_ML.Rda") #original dataset
+#load(file = "FINAL_red_ML.Rda") #original dataset
+load(file = "SYNTHETIC_red_ML.Rda") #synthetic dataset
 
+red <- sds_model_data_save
 ```
 
-First, I split the data into training (80%) and testing. 
-```{r, warning=FALSE, echo=FALSE, include=FALSE}
-###subset data to use in the models
-#str(red, list.len=ncol(red))
-#MANY of these variables are future-looking and inappropriate to include in the model or are factors the judge/judicial system would not have access to for one reason or another
-
-#Make same change to murder as in data prep for the outcome variable
-red$tPersonalF_adult <- red$tPersonalF_adult - red$tmurder_adult
-
-```
-
-I end up with `r nrow(train)` datapoints in my training data and `r nrow(test)` in my testing data. 
-
-Then I need to build a model for prediction. I have chosen an ordered logit to test first because my data is not purely categorical, but has a logical order to it. A non-grade crime (like a DUI) is less serious than a misdemeanor (like a retail theft, for example), which is less serious than a felony (like an aggravated assault causing serious bodily injury), which is less serious than murder (which receives an automatic life sentence in Pennsylvania). 
-
-```{r, warning=FALSE, echo=FALSE, include=FALSE}
-###SELECTING THE FEATURES I WANT IN MY MODEL
-
-model_data_selections<- c("toprearrest", "PRSCONV1_41", "PRSCONV2_42", "PRSCONV3_43", "PRSCONV4_44", "PRSCONV5_45", "PRSCONV_6", "PRSCONV8_48", "PRSCONV9_49", "PRSCONV10_59", "PRSCONV11_50", "PRSCONV12_58", "PRSCONV13_61", "PRSCONV_14", "PRSCONV_15", "PRSCONV_16", "PRSCONV_17", "PRSCONV18_62", "PRSCONV19_51", "PRSCONV20_53", "PRSCONV21_63", "PRSCONV22_65", "PRSCONV23_64", "PRSCONV24_66", "PRSCONV25_67", "PRSCONV26_68", "PRSCONV_27", "PRSCONV28_71", "PRSCONV29_72", "PRSCONV30_74", "PRSCONV31_75", "PRSCONV32_78", "PRSCONV33_79", "PRSCONV34_80", "PRSCONV35_81", "PRSCONV36_82", "PRSCONV37_83", "PRSCONV38_84", "PRSCONV39_76", "PRSCONV40_89", "PRSCONV_47",  "PRSCONV_52", "PRSCONV_54", "PRSCONV_55", "PRSCONV_56", "PRSCONV_57",  "PRSCONV_60", "PRSCONV_61",  "PRSCONV_69", "PRSCONV_70", "PRSCONV_73",  "PRSCONV_77", "PRSCONV_85", "PRSCONV_86", "PRSCONV_87", "PRSCONV_88", "tburglary_adult", "tpropertyF_adult", "tpropertyM_adult", "tPersonalM_adult", "tPersonalF_adult", "tSexOF_adult", "tSexOM_adult", "tDrugF_adult", "tDrugM_adult", "tDUI_adult", "tOtherTraffic_adult", "tFirearms_adult", "tOtherweapons_adult", "tdomestic_adult", "tabscond_adult", "tconspiracy_adult", "tPublicOrder_adult", "tPublicAdm_adult", "tmurder_adult", "AgeFirstArrest18", "rate_offense", "drug", "ENHANCEMENT_WEAPONS", "POSSESSED_USED", "race_new", "age_new", "dofage", "sex_new")
-model_data <- red[model_data_selections]
-
-###CHECKING ALL THE VARIABLES THAT REMAIN
-#Drop any crime variables that have fewer than 50 people who have ever committed this crime in our data
-#To find these cases
-# for(i in 2:ncol(model_data)) {
-#   true <- (model_data[i]>0)
-#   numtrue <- sum(true)
-#   print(colnames(model_data)[i])
-#   print(numtrue)
-# }
-
-drop <- c("PRSCONV_6", "PRSCONV8_48", "PRSCONV10_59", "PRSCONV12_58", "PRSCONV_27", "PRSCONV30_74",
-          "PRSCONV31_75", "PRSCONV33_79", "PRSCONV35_81",  "PRSCONV37_83", "PRSCONV_52",  "PRSCONV_54",
-          "PRSCONV_55", "PRSCONV_56", "PRSCONV_57",  "PRSCONV_60", "PRSCONV_61", "PRSCONV_69",
-          "PRSCONV_70", "PRSCONV_73", "PRSCONV_85")
-model_data = model_data[,!(names(model_data) %in% drop)]
-
-#table(model_data$AgeFirstArrest18)
-#table(model_data$rate_offense)
-#table(red$totalpriorcharges_adult)
-
-#table(model_data$drug)
-#Collapsing some levels of factors that are sparsely populated into "Other" categories
-#Anything with less than 50 cases in drug
-model_data$drug[model_data$drug=="Designer Drugs" | model_data$drug=="Steroids" | model_data$drug=="Ectasy"] <- "Other Drug Offenses"
-model_data$drug <- factor(model_data$drug) #drops factors with 0 cases
-
-# levels(model_data$ENHANCEMENT_WEAPONS)
-#(model_data$ENHANCEMENT_WEAPONS)
-#Collapsing the gun categories -- in this case I am going to leave blunt instrument even though it has 37 observations because there's not an obvious category to wrap it in with
-levels(model_data$ENHANCEMENT_WEAPONS) <- c(levels(model_data$ENHANCEMENT_WEAPONS),"Firearm", "No Weapon", "Other/Unknown Weapon")
-model_data$ENHANCEMENT_WEAPONS[model_data$ENHANCEMENT_WEAPONS=="HandGun/Pistol/Revolver" |
-                               model_data$ENHANCEMENT_WEAPONS=="Long Gun/Rifle/Shotgun" |
-                               model_data$ENHANCEMENT_WEAPONS=="Gun/Other"] <- "Firearm"
-model_data$ENHANCEMENT_WEAPONS[model_data$ENHANCEMENT_WEAPONS==""] <- "No Weapon"
-model_data$ENHANCEMENT_WEAPONS[model_data$ENHANCEMENT_WEAPONS=="Other Weapon" |
-                               model_data$ENHANCEMENT_WEAPONS=="Unknown Weapon"] <- "Other/Unknown Weapon"
-model_data$ENHANCEMENT_WEAPONS <- factor(model_data$ENHANCEMENT_WEAPONS) #drops factors with 0 cases
-
-#table(model_data$POSSESSED_USED)
-
-#table(model_data$race_new)
-#Note: I am not trying to impute some of these, like race, because this is already an imputed variable
-model_data$race_new[model_data$race_new=="Unknown"] <- "Other"
-model_data$race_new <- factor(model_data$race_new) #drops factors with 0 cases
-
-#table(model_data$age_new)
-model_data$age_new <- factor(model_data$age_new) #drops factors with 0 cases
-
-#table(as.integer(model_data$dofage))
-
-#table(model_data$sex_new)
-model_data$sex_new <- factor(model_data$sex_new) #drops factors with 0 cases
-
-#table(model_data$tot_conv)
-```
 
 ```{r}
 ### This was one of my main sources for why to use an ordered logit and how to code it: https://www.princeton.edu/~otorres/LogitR101.pdf
@@ -113,8 +39,8 @@ model_data$sex_new <- factor(model_data$sex_new) #drops factors with 0 cases
 #stargazer(logit, type="html", out="logit.htm")
 
 #I started with murders and DUIs separate but this was way too many classes -- there were 0 preds in some of them
-red$toprearrest <- ifelse(red$murder==1 | red$felony==1, 2,
-                            ifelse(red$misdemeanor==1 | red$nongrade==1, 1, 0))
+red$toprearrest <- ifelse(red$toprearrest=="4" | red$toprearrest=="3", "2",
+                            ifelse(red$toprearrest=="2" | red$toprearrest=="1", "1", "0"))
 red$toprearrest <- as.factor(red$toprearrest)
 table(red$toprearrest)
 
@@ -122,6 +48,7 @@ table(red$toprearrest)
 model_data$toprearrest <- factor(red$toprearrest, levels=0:2, ordered=T)
 
 ### Split data into train and test set (reused code from HW4)
+#First, I split the data into training (80%) and testing. 
 set.seed(123) 
 sample <- sample.int(n = nrow(model_data), size = floor(.8*nrow(model_data)), replace = F)
 train <- model_data[sample, ]
