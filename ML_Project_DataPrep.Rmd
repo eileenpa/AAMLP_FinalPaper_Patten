@@ -26,43 +26,45 @@ options(scipen=999)
 The original dataset has 947 features and 131,076 observations. We classify the features broadly as features from previous history, current crime, from the person (demographics), guidelines of sentence, movements during incaceration, and features describing behavior after release.
 ```{r}
 setwd("C:/Users/EileenPatten/Documents/MLPipeline/Project") 
-load(file = "PCS_Recidivism_04_06_AlexC.Rda") #original dataset
+#load(file = "PCS_Recidivism_04_06_AlexC.Rda") #original dataset
+load(file = "SYNTHETIC_red_ML.Rda") #original dataset
 ```
 
 ###THIS SECTION OF CODE WAS CREATED BY ONE OF MY SYSTEMS TEAMMATES 
 We selected 649 out of them, mainly deleting the movements of the inchoates while in jail and administrative variables from the "current crime".
 ```{r}
-red <- df %>% select(2:5, 7, 14:16, 18, 
-                       126, 630, 631, 944:946, 680:683,#sex and race
-                       171:174,  # offender age at time of offense, dates of offense and sentence
-                       186, 191, # arrest date
-                       21:23, #judge name DELETE
-                       34, #PK of offenses
-                       61, #completed or uncompleted crime 
-                       68,142, #type of incarceration (if any)
-                       84,89:90, 636:638, 646:662, 739, #about the crime and it seriousness
-                       678, 942, # OGS scores
-                       117:125, 605, # punishment info
-                       43, 193, 629, 738, # sentence start, year of sentence, county
-                       130:133, 141, 150, # probation dates and indicators
-                       52, #comment on the sentence        
-                       53, 97:99 , #conformity to guideline and reasons for being out of the guidelines
-                       59, 102:106, #guidelines
-                       155, 194,# sentencing guideline level (5 colors in matrix)
-                       55, 113, #info of drug amount
-                       56:58 , 164, #enhancements increasing OGS           
-                       286:327, 671:677, # prior charges
-                       328:367, # juvenile record
-                       368:407, #adult record        
-                       408:447, 697:729, # first charges
-                       448:487, 623:628, # yr1 after release felonies
-                       488:527, 617:622, # yr2 felonies
-                       528:567, 689:692, 695:696, # yr3 felonies
-                       569:572, 574:576, 585, 741, # Release date,escape flag, sex, and race prior
-                       607, # Type of sanction given; 
-                       684:685, 744, 743, 693:694,  # years of follow up, rearrest    
-                       734,737,740,745,751,
-                       753:ncol(df))
+#Commented out because I build this into the synthetic data file
+# red <- df %>% select(2:5, 7, 14:16, 18, 
+#                        126, 630, 631, 944:946, 680:683,#sex and race
+#                        171:174,  # offender age at time of offense, dates of offense and sentence
+#                        186, 191, # arrest date
+#                        21:23, #judge name DELETE
+#                        34, #PK of offenses
+#                        61, #completed or uncompleted crime 
+#                        68,142, #type of incarceration (if any)
+#                        84,89:90, 636:638, 646:662, 739, #about the crime and it seriousness
+#                        678, 942, # OGS scores
+#                        117:125, 605, # punishment info
+#                        43, 193, 629, 738, # sentence start, year of sentence, county
+#                        130:133, 141, 150, # probation dates and indicators
+#                        52, #comment on the sentence        
+#                        53, 97:99 , #conformity to guideline and reasons for being out of the guidelines
+#                        59, 102:106, #guidelines
+#                        155, 194,# sentencing guideline level (5 colors in matrix)
+#                        55, 113, #info of drug amount
+#                        56:58 , 164, #enhancements increasing OGS           
+#                        286:327, 671:677, # prior charges
+#                        328:367, # juvenile record
+#                        368:407, #adult record        
+#                        408:447, 697:729, # first charges
+#                        448:487, 623:628, # yr1 after release felonies
+#                        488:527, 617:622, # yr2 felonies
+#                        528:567, 689:692, 695:696, # yr3 felonies
+#                        569:572, 574:576, 585, 741, # Release date,escape flag, sex, and race prior
+#                        607, # Type of sanction given; 
+#                        684:685, 744, 743, 693:694,  # years of follow up, rearrest    
+#                        734,737,740,745,751,
+#                        753:ncol(df))
 
 ```
 
