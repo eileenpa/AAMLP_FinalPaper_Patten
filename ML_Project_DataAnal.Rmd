@@ -62,13 +62,13 @@ m.logit <- polr(toprearrest ~ . -POSSESSED_USED -race_new -age_new -dofage -sex_
 summary(m.logit)
 
 #Test proportional odds assumption: https://stats.idre.ucla.edu/r/dae/ordinal-logistic-regression/
-sf <- function(y) {
-  c('Y>=0' = qlogis(mean(y >= 0)),
-    'Y>=1' = qlogis(mean(y >= 1)),
-    'Y>=2' = qlogis(mean(y >= 2)))
-}
-
-(s <- with(train, summary(as.numeric(toprearrest) ~ . -POSSESSED_USED -race_new -age_new -dofage -sex_new, fun=sf)))
+# sf <- function(y) {
+#   c('Y>=0' = qlogis(mean(y >= 0)),
+#     'Y>=1' = qlogis(mean(y >= 1)),
+#     'Y>=2' = qlogis(mean(y >= 2)))
+# }
+# 
+# s <- with(train, summary(as.numeric(toprearrest) ~ . -POSSESSED_USED -race_new -age_new -dofage -sex_new, fun=sf))
 glm(I(as.numeric(toprearrest) >= 1) ~ ENHANCEMENT_WEAPONS, family="binomial", data = train)
 glm(I(as.numeric(toprearrest) >= 2) ~ ENHANCEMENT_WEAPONS, family="binomial", data = train)
 #This does not look great across various Xs -- I am going to try an unordered logistic regression instead. 
@@ -249,6 +249,7 @@ hist(tmlr.pred.prob$'0')
 
 
 ```
+
 ```{r}
 
 ##CHECK AUCS OF TRAINING DATA TO MAKE SURE I'M NOT OVERFITT
